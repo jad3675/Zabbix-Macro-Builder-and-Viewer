@@ -1,0 +1,784 @@
+/*
+ * Macro Matrix. Every selector is scoped under .mm-* so the module stylesheet, which Zabbix loads on all pages, cannot
+ * touch anything else. Colors are translucent tints over the active theme instead of fixed values, so the blue, dark
+ * and high-contrast themes all stay readable. --mm-bg is set from the page background by the script.
+ */
+
+.mm-root {
+	--mm-bg: #fff;
+	--mm-line: rgba(128, 128, 128, 0.35);
+	--mm-host: rgba(33, 150, 243, 0.18);
+	--mm-host-line: rgba(33, 150, 243, 0.6);
+	--mm-tpl: rgba(76, 175, 80, 0.18);
+	--mm-tpl-line: rgba(76, 175, 80, 0.6);
+	--mm-global: rgba(128, 128, 128, 0.18);
+	--mm-pending: rgba(255, 179, 0, 0.25);
+	--mm-pending-line: rgba(255, 160, 0, 0.9);
+	--mm-bad: #e45959;
+	--mm-ok: rgba(76, 175, 80, 0.25);
+	--mm-diff: rgba(156, 39, 176, 0.14);
+	--mm-diff-line: rgba(156, 39, 176, 0.7);
+}
+
+/* Filter */
+
+.mm-filter-columns {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0 40px;
+}
+
+.mm-filter-columns > .form-grid {
+	flex: 1 1 380px;
+}
+
+.mm-filter-buttons {
+	display: flex;
+	gap: 10px;
+	justify-content: center;
+	padding: 10px 0 4px;
+}
+
+.mm-subgroups {
+	margin-top: 6px;
+}
+
+.mm-hint {
+	opacity: 0.7;
+	font-size: 11px;
+	margin-top: 3px;
+}
+
+/* Tabs */
+
+.mm-tabs {
+	display: flex;
+	gap: 2px;
+	margin: 10px 0 0;
+	border-bottom: 1px solid var(--mm-line);
+}
+
+.mm-tabs .mm-tab {
+	background: transparent;
+	border: 1px solid transparent;
+	border-bottom: none;
+	border-radius: 2px 2px 0 0;
+	color: inherit;
+	padding: 6px 16px;
+	margin-bottom: -1px;
+	opacity: 0.75;
+}
+
+.mm-tabs .mm-tab.mm-tab-active {
+	background: var(--mm-bg);
+	border-color: var(--mm-line);
+	opacity: 1;
+	font-weight: bold;
+}
+
+.mm-panel {
+	padding-top: 8px;
+}
+
+/* Bars */
+
+.mm-toolbar,
+.mm-bulk,
+.mm-staged-bar,
+.mm-pager {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 8px;
+	padding: 6px 0;
+}
+
+.mm-staged-bar {
+	margin-top: 8px;
+	padding: 8px 10px;
+	background: var(--mm-pending);
+	border-left: 3px solid var(--mm-pending-line);
+}
+
+.mm-bulk {
+	min-height: 28px;
+}
+
+.mm-spacer {
+	flex: 1;
+}
+
+.mm-inline {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.mm-find-filter {
+	width: 260px;
+}
+
+.mm-pager {
+	justify-content: flex-end;
+}
+
+.mm-legend {
+	opacity: 0.8;
+	font-size: 11px;
+	padding: 4px 0 10px;
+	line-height: 2;
+}
+
+.mm-legend .mm-badge {
+	margin-left: 8px;
+}
+
+/* Grid */
+
+.mm-table-wrap {
+	overflow: auto;
+	max-height: calc(100vh - 260px);
+	min-height: 120px;
+	border: 1px solid var(--mm-line);
+}
+
+.mm-grid,
+.mm-find {
+	border-collapse: separate;
+	border-spacing: 0;
+}
+
+.mm-grid thead th {
+	position: sticky;
+	top: 0;
+	z-index: 2;
+	background: var(--mm-bg);
+	vertical-align: bottom;
+}
+
+.mm-grid .mm-sticky {
+	position: sticky;
+	z-index: 1;
+	background: var(--mm-bg);
+}
+
+.mm-grid thead th.mm-sticky {
+	z-index: 3;
+}
+
+.mm-grid .mm-col-check {
+	left: 0;
+	width: 24px;
+	min-width: 24px;
+}
+
+.mm-grid .mm-col-host {
+	left: var(--mm-check-w, 36px);
+	min-width: 180px;
+	max-width: 260px;
+	border-right: 1px solid var(--mm-line);
+}
+
+.mm-col-macro {
+	min-width: 120px;
+	max-width: 220px;
+}
+
+.mm-col-macro .mm-macro,
+.mm-trans-name .mm-macro {
+	word-break: normal;
+	overflow-wrap: normal;
+}
+
+.mm-macro {
+	font-family: "DejaVu Sans Mono", Menlo, Consolas, monospace;
+	font-size: 11px;
+	word-break: break-all;
+}
+
+.mm-colmode {
+	display: block;
+	font-weight: normal;
+	font-size: 10px;
+	opacity: 0.7;
+}
+
+.mm-cell {
+	cursor: pointer;
+	max-width: 280px;
+	word-break: break-word;
+}
+
+.mm-cell:hover {
+	box-shadow: inset 0 0 0 1px var(--mm-line);
+}
+
+.mm-cell:focus-visible {
+	outline: 2px solid var(--mm-host-line);
+	outline-offset: -2px;
+}
+
+.mm-cell.mm-staged {
+	background: var(--mm-pending);
+	box-shadow: inset 3px 0 0 var(--mm-pending-line);
+}
+
+.mm-cell.mm-staged-src {
+	box-shadow: inset 0 0 0 1px var(--mm-pending-line);
+}
+
+.mm-readonly .mm-cell {
+	cursor: help;
+}
+
+.mm-readonly .mm-col-host a {
+	opacity: 0.8;
+}
+
+.mm-value {
+	margin-right: 2px;
+}
+
+.mm-undef {
+	color: var(--mm-bad);
+	font-weight: bold;
+}
+
+.mm-muted {
+	opacity: 0.65;
+}
+
+.mm-small {
+	font-size: 11px;
+}
+
+.mm-secret {
+	letter-spacing: 1px;
+	opacity: 0.8;
+}
+
+.mm-strike {
+	text-decoration: line-through;
+	opacity: 0.6;
+}
+
+.mm-nowrap {
+	white-space: nowrap;
+}
+
+/* Badges */
+
+.mm-badge {
+	display: inline-block;
+	padding: 0 5px;
+	border-radius: 2px;
+	border: 1px solid var(--mm-line);
+	font-size: 10px;
+	line-height: 15px;
+	white-space: nowrap;
+	max-width: 180px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	vertical-align: middle;
+}
+
+.mm-src-host {
+	background: var(--mm-host);
+	border-color: var(--mm-host-line);
+}
+
+.mm-src-template {
+	background: var(--mm-tpl);
+	border-color: var(--mm-tpl-line);
+}
+
+.mm-src-global {
+	background: var(--mm-global);
+}
+
+.mm-flag {
+	background: transparent;
+}
+
+.mm-pending {
+	background: var(--mm-pending);
+	border-color: var(--mm-pending-line);
+}
+
+.mm-ok {
+	background: var(--mm-ok);
+}
+
+.mm-bad {
+	border-color: var(--mm-bad);
+	color: var(--mm-bad);
+}
+
+/* Empty and busy states */
+
+.mm-empty {
+	padding: 30px 10px;
+	text-align: center;
+	opacity: 0.75;
+}
+
+.mm-busy::before {
+	content: "";
+	display: inline-block;
+	width: 12px;
+	height: 12px;
+	margin-right: 8px;
+	vertical-align: -2px;
+	border: 2px solid var(--mm-line);
+	border-top-color: currentColor;
+	border-radius: 50%;
+	animation: mm-spin 0.8s linear infinite;
+}
+
+@keyframes mm-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.mm-busy::before {
+		animation: none;
+	}
+}
+
+/* Dialogs (built on Zabbix overlay classes for theme colors, positioned here) */
+
+.mm-dialog-bg {
+	position: fixed;
+	inset: 0;
+	z-index: 1000;
+}
+
+.overlay-dialogue.mm-dialog {
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	z-index: 1001;
+	width: 560px;
+	max-width: calc(100vw - 40px);
+	max-height: calc(100vh - 40px);
+	display: flex;
+	flex-direction: column;
+}
+
+.overlay-dialogue.mm-dialog.mm-dialog-wide {
+	width: 1000px;
+}
+
+.mm-dialog .mm-dialog-body {
+	overflow: auto;
+	flex: 1 1 auto;
+	max-height: none;
+}
+
+.mm-dialog-footer {
+	display: flex;
+	justify-content: flex-end;
+	gap: 10px;
+}
+
+.mm-dialog-error {
+	margin-bottom: 10px;
+}
+
+.mm-current {
+	padding-bottom: 8px;
+	border-bottom: 1px solid var(--mm-line);
+	margin-bottom: 8px;
+}
+
+.mm-chain {
+	margin: 6px 0 0;
+	padding: 6px 8px;
+	font-size: 11px;
+	white-space: pre-wrap;
+	word-break: break-all;
+	background: var(--mm-global);
+	max-height: 160px;
+	overflow: auto;
+}
+
+.mm-modes {
+	border: none;
+	margin: 0 0 8px;
+	padding: 0;
+}
+
+.mm-modes label {
+	display: block;
+	padding: 3px 0;
+}
+
+.mm-modes label.mm-disabled {
+	opacity: 0.55;
+}
+
+.mm-fields label {
+	display: block;
+	margin-top: 8px;
+}
+
+.mm-fields input[type="text"],
+.mm-fields input[type="password"],
+.mm-fields select,
+.mm-fields textarea {
+	display: block;
+	width: 100%;
+	box-sizing: border-box;
+	margin-top: 3px;
+}
+
+.mm-reach-slot {
+	margin-top: 10px;
+}
+
+.mm-reach-summary {
+	padding: 8px 10px;
+	background: var(--mm-tpl);
+	border-left: 3px solid var(--mm-tpl-line);
+}
+
+/* Review */
+
+.mm-review-body h5 {
+	margin: 12px 0 6px;
+	font-size: 13px;
+}
+
+.mm-review-source {
+	padding: 4px 10px 10px;
+	margin-bottom: 10px;
+	border-left: 3px solid var(--mm-tpl-line);
+}
+
+.mm-overrides table,
+.mm-review-scroll {
+	margin-top: 6px;
+}
+
+.mm-overrides {
+	max-height: 260px;
+	overflow: auto;
+}
+
+.mm-review-scroll {
+	max-height: 360px;
+	overflow: auto;
+}
+
+.mm-review-table td {
+	vertical-align: top;
+}
+
+/* Segmented toggles (Matrix / List, Compact / Detailed) */
+
+.mm-seg {
+	display: inline-flex;
+	border: 1px solid var(--mm-line);
+	border-radius: 2px;
+	overflow: hidden;
+}
+
+.mm-seg button {
+	background: transparent;
+	border: none;
+	border-radius: 0;
+	color: inherit;
+	padding: 4px 10px;
+	min-height: 0;
+	height: auto;
+	line-height: 16px;
+}
+
+.mm-seg button + button {
+	border-left: 1px solid var(--mm-line);
+}
+
+.mm-seg button.mm-seg-on {
+	background: var(--mm-host);
+	font-weight: bold;
+}
+
+/* Column picker */
+
+.mm-colpick-wrap {
+	position: relative;
+}
+
+.mm-colpick {
+	position: absolute;
+	top: calc(100% + 4px);
+	left: 0;
+	z-index: 20;
+	min-width: 280px;
+	max-width: 420px;
+	padding: 8px;
+	background: var(--mm-bg);
+	border: 1px solid var(--mm-line);
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.mm-colpick-actions {
+	display: flex;
+	gap: 12px;
+	padding-bottom: 6px;
+	margin-bottom: 6px;
+	border-bottom: 1px solid var(--mm-line);
+}
+
+.mm-colpick-list {
+	max-height: 320px;
+	overflow: auto;
+}
+
+.mm-colpick-list label {
+	display: block;
+	padding: 2px 0;
+}
+
+/* Row header */
+
+.mm-kind {
+	display: inline-block;
+	font-size: 10px;
+	line-height: 14px;
+	padding: 0 4px;
+	border: 1px solid var(--mm-line);
+	border-radius: 2px;
+	opacity: 0.8;
+	vertical-align: middle;
+}
+
+.mm-row-template .mm-col-host,
+.mm-row-template .mm-host-link {
+	font-style: italic;
+}
+
+.mm-ellipsis {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* List layout: vertical only */
+
+.mm-list {
+	width: 100%;
+}
+
+.mm-list .mm-list-first td {
+	border-top: 1px solid var(--mm-line);
+}
+
+.mm-list .mm-list-row {
+	width: 28%;
+}
+
+.mm-list .mm-macro {
+	width: 24%;
+}
+
+.mm-list .mm-cell {
+	max-width: none;
+}
+
+/* Macros as rows */
+
+.mm-trans {
+	width: 100%;
+	table-layout: fixed;
+	border-collapse: separate;
+	border-spacing: 0;
+}
+
+.mm-trans col.mm-trans-namecol {
+	width: 280px;
+}
+
+.mm-trans thead th {
+	position: sticky;
+	top: 0;
+	z-index: 2;
+	background: var(--mm-bg);
+	vertical-align: bottom;
+	white-space: normal;
+	word-break: break-word;
+}
+
+.mm-trans .mm-group td {
+	padding-top: 10px;
+	border-top: 1px solid var(--mm-line);
+}
+
+.mm-group-toggle {
+	font-weight: bold;
+}
+
+.mm-chevron {
+	display: inline-block;
+	width: 12px;
+}
+
+.mm-trans-name {
+	padding-left: 24px;
+}
+
+.mm-tcell {
+	vertical-align: top;
+}
+
+.mm-tval {
+	font-family: "DejaVu Sans Mono", Menlo, Consolas, monospace;
+	font-size: 11px;
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+}
+
+.mm-tnote {
+	margin-top: 2px;
+}
+
+.mm-tcell.mm-differs {
+	background: var(--mm-diff);
+	box-shadow: inset 3px 0 0 var(--mm-diff-line);
+}
+
+.mm-tcell.mm-staged {
+	box-shadow: inset 3px 0 0 var(--mm-pending-line);
+}
+
+.mm-pill-own {
+	display: inline-block;
+	padding: 0 6px;
+	font-size: 10px;
+	line-height: 15px;
+	border-radius: 2px;
+	background: var(--mm-host);
+	border: 1px solid var(--mm-host-line);
+	white-space: nowrap;
+}
+
+.mm-legend-diff {
+	padding: 0 4px;
+	background: var(--mm-diff);
+	box-shadow: inset 3px 0 0 var(--mm-diff-line);
+}
+
+.mm-row-filter,
+.mm-macro-filter {
+	width: 220px;
+}
+
+/* Lookup and reach diagrams */
+
+.mm-flow-wrap {
+	margin: 8px 0;
+}
+
+.mm-flow-wrap > summary {
+	cursor: pointer;
+	font-weight: bold;
+	padding: 4px 0;
+}
+
+.mm-flow {
+	padding: 6px 0 2px;
+}
+
+.mm-flow-level {
+	display: grid;
+	grid-template-columns: 90px minmax(0, 1fr);
+	gap: 10px;
+	align-items: start;
+}
+
+.mm-flow-label {
+	padding-top: 8px;
+	font-size: 11px;
+	opacity: 0.75;
+}
+
+.mm-flow-boxes {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: flex-start;
+}
+
+.mm-flow-box {
+	flex: 1 1 200px;
+	max-width: 100%;
+	padding: 6px 9px;
+	border: 1px solid var(--mm-line);
+	border-radius: 3px;
+	box-sizing: border-box;
+	min-width: 0;
+}
+
+.mm-flow-used {
+	border: 2px solid var(--mm-tpl-line);
+	background: var(--mm-tpl);
+}
+
+.mm-flow-empty {
+	border-style: dashed;
+	opacity: 0.65;
+}
+
+.mm-flow-name {
+	font-weight: bold;
+}
+
+.mm-flow-def {
+	margin-top: 3px;
+	overflow-wrap: anywhere;
+}
+
+.mm-flow-def-off .mm-flow-val {
+	text-decoration: line-through;
+	opacity: 0.7;
+}
+
+.mm-flow-val {
+	font-family: "DejaVu Sans Mono", Menlo, Consolas, monospace;
+	font-size: 11px;
+}
+
+.mm-flow-yes {
+	font-weight: bold;
+}
+
+.mm-flow-arrow {
+	padding: 2px 0 2px 100px;
+	opacity: 0.7;
+}
+
+.mm-flow-note {
+	margin: 4px 0 8px;
+	font-size: 11px;
+}
+
+.mm-flow-more {
+	align-self: center;
+}
+
+.mm-flow-bucket summary {
+	cursor: pointer;
+}
+
+.mm-flow-bucket ul {
+	margin: 6px 0 0 16px;
+	max-height: 180px;
+	overflow: auto;
+}
+
+.mm-review-flow {
+	margin-bottom: 8px;
+}

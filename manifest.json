@@ -1,0 +1,39 @@
+{
+	"manifest_version": 2.0,
+	"id": "macromatrix",
+	"name": "Macro Matrix",
+	"namespace": "MacroMatrix",
+	"version": "1.4.0",
+	"author": "John Danhires",
+	"description": "Hosts x user macros grid: effective values, where they come from, and bulk editing of host and template macros.",
+	"actions": {
+		"macromatrix.view": {
+			"class": "MacroMatrixView",
+			"view": "macromatrix.view",
+			"layout": "layout.htmlpage"
+		},
+		"macromatrix.resolve": {
+			"class": "MacroMatrixResolve",
+			"layout": "layout.json"
+		},
+		"macromatrix.find": {
+			"class": "MacroMatrixFind",
+			"layout": "layout.json"
+		},
+		"macromatrix.reach": {
+			"class": "MacroMatrixReach",
+			"layout": "layout.json"
+		},
+		"macromatrix.templates": {
+			"class": "MacroMatrixTemplates",
+			"layout": "layout.json"
+		},
+		"macromatrix.apply": {
+			"class": "MacroMatrixApply",
+			"layout": "layout.json"
+		}
+	},
+	"assets": {
+		"css": ["macromatrix.css"]
+	}
+}
