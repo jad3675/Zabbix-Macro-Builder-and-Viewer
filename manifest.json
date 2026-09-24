@@ -3,7 +3,7 @@
 	"id": "macromatrix",
 	"name": "Macro Matrix",
 	"namespace": "MacroMatrix",
-	"version": "1.5.0",
+	"version": "1.5.1",
 	"author": "John Danhires",
 	"description": "Hosts x user macros grid: effective values, where they come from, and bulk editing of host and template macros.",
 	"actions": {

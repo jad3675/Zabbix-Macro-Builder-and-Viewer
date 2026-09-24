@@ -3170,28 +3170,43 @@ window.macromatrix = new class {
 
 	async openTemplateHosts(row, direct_only) {
 		const body = this.el('<div class="mm-detail"><p class="mm-muted">Loading hosts...</p></div>');
+		const selected = new Map();
+
+		const buttons = () => [
+			{
+				label: selected.size > 0 ? `Open ${selected.size} selected in grid` : 'Open selected in grid',
+				primary: true,
+				disabled: selected.size === 0,
+				action: async () => {
+					this.openHostsInGrid(row, [...selected.values()]);
+
+					return true;
+				}
+			},
+			{label: 'Compare with all its hosts', action: async () => {
+				this.openTemplatesInGrid([row], true);
+
+				return true;
+			}},
+			{label: 'Close'}
+		];
+
 		const api = this.openDialog({
 			title: `${direct_only ? 'Hosts linked directly to' : 'Hosts using'} ${row.name}`,
 			body,
 			wide: true,
-			buttons: [
-				{label: 'Compare with its hosts', primary: true, action: async () => {
-					this.openTemplatesInGrid([row], true);
-
-					return true;
-				}},
-				{label: 'Close'}
-			]
+			buttons: buttons()
 		});
 
 		try {
 			const data = await this.post('tpldetail', {templateid: row.templateid, what: 'hosts'});
 			const direct = data.hosts.filter(h => h.direct).length;
+			const by_id = new Map(data.hosts.map(h => [h.hostid, h]));
 
 			body.innerHTML = '';
 			body.append(this.el(`<p class="mm-muted mm-small">${data.total} host(s) use this template: ${direct} linked
-				directly, ${data.total - direct} only through templates that link it.${direct_only
-					? ' Showing the directly linked ones.' : ''}${data.truncated ? ' List shortened.' : ''}</p>`));
+				directly, ${data.total - direct} only through templates that link it.${data.truncated ? ' List shortened.' : ''}
+				Click a host to load it into the grid next to the template, or tick several.</p>`));
 
 			const toolbar = this.el(`<div class="mm-toolbar">
 				<input type="search" class="mm-detail-filter" placeholder="Filter hosts" aria-label="Filter hosts">
@@ -3200,29 +3215,71 @@ window.macromatrix = new class {
 			</div>`);
 			const wrap = this.el('<div class="mm-detail-scroll"></div>');
 			const count = this.el('<div class="mm-pager"></div>');
+			let shown = [];
 
 			const draw = () => {
 				const needle = toolbar.querySelector('.mm-detail-filter').value.toLowerCase();
 				const only = toolbar.querySelector('.mm-direct-only').checked;
-				const rows = data.hosts.filter(h => (!only || h.direct)
+
+				shown = data.hosts.filter(h => (!only || h.direct)
 					&& (needle === '' || h.name.toLowerCase().includes(needle) || h.host.toLowerCase().includes(needle)));
 
-				wrap.innerHTML = `<table class="list-table"><thead><tr><th>Host</th><th>How it gets the template</th>
-					</tr></thead><tbody>${rows.map(h => `<tr>
-						<td><a href="${this.hostUrl(h.hostid)}">${this.esc(h.name)}</a>${h.name !== h.host
+				const all = shown.length > 0 && shown.every(h => selected.has(h.hostid));
+
+				wrap.innerHTML = `<table class="list-table"><thead><tr>
+					<th class="mm-col-check"><input type="checkbox" class="mm-h-all" aria-label="Select all shown hosts"
+						${all ? 'checked' : ''}></th>
+					<th>Host</th><th>How it gets the template</th><th></th></tr></thead><tbody>${shown.map(h => `<tr>
+						<td class="mm-col-check"><input type="checkbox" class="mm-h-check" value="${h.hostid}"
+							aria-label="Select ${this.esc(h.name)}" ${selected.has(h.hostid) ? 'checked' : ''}></td>
+						<td><button type="button" class="btn-link mm-h-open" data-id="${h.hostid}"
+							title="Load ${this.esc(h.name)} into the grid next to ${this.esc(row.name)}">${this.esc(h.name)}</button>${h.name !== h.host
 							? ` <span class="mm-muted mm-small">${this.esc(h.host)}</span>` : ''}${h.status === 1
 							? ' <span class="mm-kind">disabled</span>' : ''}</td>
 						<td class="mm-small">${[
 							h.direct ? 'linked directly' : '',
 							...h.via.map(v => `through ${this.esc(v)}`)
 						].filter(Boolean).join(', ')}</td>
+						<td class="mm-nowrap"><a href="${this.hostUrl(h.hostid)}" class="mm-small"
+							title="Open the Zabbix host editor instead">host editor</a></td>
 					</tr>`).join('')}</tbody></table>`;
 
-				count.textContent = `${rows.length} of ${data.hosts.length} host(s) shown`;
+				count.textContent = `${shown.length} of ${data.hosts.length} host(s) shown, ${selected.size} selected`;
+			};
+
+			const refreshButtons = () => {
+				api.setButtons(buttons());
+				count.textContent = `${shown.length} of ${data.hosts.length} host(s) shown, ${selected.size} selected`;
 			};
 
 			toolbar.addEventListener('input', draw);
 			toolbar.addEventListener('change', draw);
+
+			wrap.addEventListener('change', e => {
+				if (e.target.classList.contains('mm-h-all')) {
+					for (const h of shown) {
+						e.target.checked ? selected.set(h.hostid, h) : selected.delete(h.hostid);
+					}
+
+					draw();
+				}
+				else if (e.target.classList.contains('mm-h-check')) {
+					const h = by_id.get(e.target.value);
+					e.target.checked ? selected.set(h.hostid, h) : selected.delete(h.hostid);
+				}
+
+				refreshButtons();
+			});
+
+			wrap.addEventListener('click', e => {
+				const open = e.target.closest('.mm-h-open');
+
+				if (open) {
+					api.close();
+					this.openHostsInGrid(row, [by_id.get(open.dataset.id)]);
+				}
+			});
+
 			body.append(toolbar, wrap, count);
 			draw();
 			toolbar.querySelector('.mm-detail-filter').focus();
@@ -3231,6 +3288,35 @@ window.macromatrix = new class {
 			this.dialogError(api, error);
 			body.querySelector('p')?.remove();
 		}
+	}
+
+	/**
+	 * Loads hosts into the grid together with the template they came from, so the template's values sit next to
+	 * theirs as the baseline and the drift tint shows where each host deviates.
+	 */
+	openHostsInGrid(template, hosts) {
+		for (const id of ['#groupids_', '#hostids_', '#tpl_groupids_', '#templateids_']) {
+			jQuery(id).multiSelect('clean');
+		}
+
+		jQuery('#hostids_').multiSelect('addData', hosts.map(h => ({id: h.hostid, name: h.name})), false);
+		jQuery('#templateids_').multiSelect('addData', [{id: template.templateid, name: template.name}], false);
+
+		this.form.querySelector('[name="rows"][value="both"]').checked = true;
+		this.form.querySelector('[name="with_hosts"]').checked = false;
+		this.form.querySelector('[name="tpl_used_only"]').checked = false;
+
+		const pattern = this.form.querySelector('[name="pattern"]');
+
+		if (pattern.value.trim() === '') {
+			pattern.value = '*';
+		}
+
+		this.setTab('grid', false);
+		this.applyRowsChoice(false);
+		this.updateUrl();
+		this.showMessage(null);
+		this.loadGrid();
 	}
 
 	visibleTemplates() {
