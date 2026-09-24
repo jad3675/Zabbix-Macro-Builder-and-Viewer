@@ -123,7 +123,7 @@ $right = (new CFormGrid())
 				->setAttribute('placeholder', _('optional, e.g. /var'))
 				->disableAutocomplete()
 				->setAttribute('spellcheck', 'false'),
-			(new CDiv(_('Adds a column per macro, resolved as {$NAME:"context"} would be.')))->addClass('mm-hint')
+			(new CDiv(_('A literal context value, not a pattern. Adds a column per macro resolved as {$NAME:"value"}.')))->addClass('mm-hint')
 		]))->addClass('js-mm-grid-only')
 	]);
 

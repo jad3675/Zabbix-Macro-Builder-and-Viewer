@@ -192,10 +192,13 @@ window.macromatrix = new class {
 		return data;
 	}
 
-	showMessage(type, title, messages = []) {
+	/**
+	 * Replaces the message area. Called with no type (or no title) it only clears it.
+	 */
+	showMessage(type = null, title = null, messages = []) {
 		this.messages.innerHTML = '';
 
-		if (title === null) {
+		if (type === null || title === null || title === undefined) {
 			return;
 		}
 

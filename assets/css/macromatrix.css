@@ -20,6 +20,12 @@
 	--mm-diff-line: rgba(156, 39, 176, 0.7);
 }
 
+/* Elements toggled with the hidden attribute must stay hidden even where a rule below sets display. */
+.mm-root [hidden],
+.mm-staged-bar[hidden] {
+	display: none !important;
+}
+
 /* Filter */
 
 .mm-filter-columns {

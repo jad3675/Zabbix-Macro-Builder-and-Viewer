@@ -1,6 +1,6 @@
 # Macro Matrix
 
-Version 1.4.0
+Version 1.4.1
 
 A Zabbix frontend module that shows the effective value of user macros across many hosts, where each value comes from, and lets you change them in bulk: host overrides, template macros at the source, pins, reverts, CSV import and export.
 
@@ -120,6 +120,11 @@ macromatrix/
 ```
 
 ## Changes
+
+**1.4.1**
+- Fixed an empty, unstyled message box appearing whenever messages were cleared (on every load).
+- Fixed the empty staged-changes bar showing as a thin orange strip.
+- Context field hint now says it takes a literal value, not a pattern.
 
 **1.4.0**
 - **Templates in use** tab: templates with hosts inheriting them, host counts (total and direct), macro counts, sorting, and one-click opening in the grid alone or next to their hosts.
