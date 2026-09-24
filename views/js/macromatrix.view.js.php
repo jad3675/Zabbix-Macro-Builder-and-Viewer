@@ -3061,6 +3061,21 @@ window.macromatrix = new class {
 				return;
 			}
 
+			const detail = e.target.closest('button[data-detail]');
+
+			if (detail) {
+				const row = data.rows.find(r => r.templateid === detail.dataset.id);
+
+				if (detail.dataset.detail === 'macros') {
+					this.openTemplateMacros(row);
+				}
+				else {
+					this.openTemplateHosts(row, detail.dataset.detail === 'direct');
+				}
+
+				return;
+			}
+
 			const open = e.target.closest('button[data-open]');
 
 			if (open) {
@@ -3070,6 +3085,152 @@ window.macromatrix = new class {
 		});
 
 		this.renderTemplatesBody();
+	}
+
+	/**
+	 * A count on the Templates in use tab as a link; zero stays plain text.
+	 */
+	countLink(row, what, value, title) {
+		if (value === 0) {
+			return `<span class="mm-muted">${what === 'macros' ? '0' : 'none'}</span>`;
+		}
+
+		return `<button type="button" class="btn-link mm-count" data-detail="${what}" data-id="${row.templateid}"
+			title="${this.esc(title)}">${value}</button>`;
+	}
+
+	async openTemplateMacros(row) {
+		const body = this.el('<div class="mm-detail"><p class="mm-muted">Loading macros...</p></div>');
+		const api = this.openDialog({
+			title: `Macros on ${row.name}`,
+			body,
+			wide: true,
+			buttons: [
+				{label: 'Open in grid', primary: true, action: async () => {
+					this.openTemplatesInGrid([row], false);
+
+					return true;
+				}},
+				{label: 'Compare with its hosts', disabled: row.total === 0, action: async () => {
+					this.openTemplatesInGrid([row], true);
+
+					return true;
+				}},
+				{label: 'Close'}
+			]
+		});
+
+		try {
+			const data = await this.post('tpldetail', {
+				templateid: row.templateid,
+				what: 'macros',
+				pattern: this.filterValues().pattern
+			});
+
+			body.innerHTML = '';
+			body.append(this.el(`<p class="mm-muted mm-small">Defined on the template itself${data.filtered
+				? ', matching the Macros filter' : ''}. Inherited macros from templates it links are not listed.</p>`));
+
+			if (data.macros.length === 0) {
+				body.append(this.el('<div class="mm-empty">No macros.</div>'));
+
+				return;
+			}
+
+			const filter = this.el(`<input type="search" class="mm-detail-filter" placeholder="Filter macros"
+				aria-label="Filter macros">`);
+			const wrap = this.el('<div class="mm-detail-scroll"></div>');
+
+			const draw = () => {
+				const needle = filter.value.toLowerCase();
+				const rows = data.macros.filter(m => needle === ''
+					|| m.macro.toLowerCase().includes(needle)
+					|| (m.type !== this.TYPE_SECRET && (m.value ?? '').toLowerCase().includes(needle))
+					|| m.description.toLowerCase().includes(needle));
+
+				wrap.innerHTML = `<table class="list-table"><thead><tr><th>Macro</th><th>Value</th><th>Type</th>
+					<th>Description</th></tr></thead><tbody>${rows.map(m => `<tr>
+						<td class="mm-macro">${this.esc(m.macro)}</td>
+						<td class="mm-tval">${this.valueHtml(m.type, m.value)}</td>
+						<td class="mm-small">${this.typeName(m.type)}</td>
+						<td class="mm-small">${this.esc(m.description)}</td>
+					</tr>`).join('')}</tbody></table>`;
+			};
+
+			filter.addEventListener('input', draw);
+			body.append(filter, wrap);
+			draw();
+			filter.focus();
+		}
+		catch (error) {
+			this.dialogError(api, error);
+			body.querySelector('p')?.remove();
+		}
+	}
+
+	async openTemplateHosts(row, direct_only) {
+		const body = this.el('<div class="mm-detail"><p class="mm-muted">Loading hosts...</p></div>');
+		const api = this.openDialog({
+			title: `${direct_only ? 'Hosts linked directly to' : 'Hosts using'} ${row.name}`,
+			body,
+			wide: true,
+			buttons: [
+				{label: 'Compare with its hosts', primary: true, action: async () => {
+					this.openTemplatesInGrid([row], true);
+
+					return true;
+				}},
+				{label: 'Close'}
+			]
+		});
+
+		try {
+			const data = await this.post('tpldetail', {templateid: row.templateid, what: 'hosts'});
+			const direct = data.hosts.filter(h => h.direct).length;
+
+			body.innerHTML = '';
+			body.append(this.el(`<p class="mm-muted mm-small">${data.total} host(s) use this template: ${direct} linked
+				directly, ${data.total - direct} only through templates that link it.${direct_only
+					? ' Showing the directly linked ones.' : ''}${data.truncated ? ' List shortened.' : ''}</p>`));
+
+			const toolbar = this.el(`<div class="mm-toolbar">
+				<input type="search" class="mm-detail-filter" placeholder="Filter hosts" aria-label="Filter hosts">
+				<label class="mm-inline mm-small"><input type="checkbox" class="mm-direct-only" ${direct_only ? 'checked' : ''}>
+					Linked directly only</label>
+			</div>`);
+			const wrap = this.el('<div class="mm-detail-scroll"></div>');
+			const count = this.el('<div class="mm-pager"></div>');
+
+			const draw = () => {
+				const needle = toolbar.querySelector('.mm-detail-filter').value.toLowerCase();
+				const only = toolbar.querySelector('.mm-direct-only').checked;
+				const rows = data.hosts.filter(h => (!only || h.direct)
+					&& (needle === '' || h.name.toLowerCase().includes(needle) || h.host.toLowerCase().includes(needle)));
+
+				wrap.innerHTML = `<table class="list-table"><thead><tr><th>Host</th><th>How it gets the template</th>
+					</tr></thead><tbody>${rows.map(h => `<tr>
+						<td><a href="${this.hostUrl(h.hostid)}">${this.esc(h.name)}</a>${h.name !== h.host
+							? ` <span class="mm-muted mm-small">${this.esc(h.host)}</span>` : ''}${h.status === 1
+							? ' <span class="mm-kind">disabled</span>' : ''}</td>
+						<td class="mm-small">${[
+							h.direct ? 'linked directly' : '',
+							...h.via.map(v => `through ${this.esc(v)}`)
+						].filter(Boolean).join(', ')}</td>
+					</tr>`).join('')}</tbody></table>`;
+
+				count.textContent = `${rows.length} of ${data.hosts.length} host(s) shown`;
+			};
+
+			toolbar.addEventListener('input', draw);
+			toolbar.addEventListener('change', draw);
+			body.append(toolbar, wrap, count);
+			draw();
+			toolbar.querySelector('.mm-detail-filter').focus();
+		}
+		catch (error) {
+			this.dialogError(api, error);
+			body.querySelector('p')?.remove();
+		}
 	}
 
 	visibleTemplates() {
@@ -3123,9 +3284,9 @@ window.macromatrix = new class {
 						aria-label="Select ${this.esc(row.name)}" ${this.tpl_checked.has(row.templateid) ? 'checked' : ''}></td>
 					<td><a href="${this.templateUrl(row.templateid)}">${this.esc(row.name)}</a>${row.editable
 						? '' : ' <span class="mm-kind">read-only</span>'}</td>
-					<td>${row.total === 0 ? '<span class="mm-muted">none</span>' : row.total}</td>
-					<td>${row.direct === 0 ? '<span class="mm-muted">0</span>' : row.direct}</td>
-					<td>${row.macros === 0 ? '<span class="mm-muted">0</span>' : row.macros}</td>
+					<td>${this.countLink(row, 'hosts', row.total, 'List every host using this template')}</td>
+					<td>${this.countLink(row, 'direct', row.direct, 'List the hosts linked to this template itself')}</td>
+					<td>${this.countLink(row, 'macros', row.macros, 'List the macros on this template')}</td>
 					<td class="mm-nowrap">
 						<button type="button" class="btn-link" data-open="hosts" data-id="${row.templateid}"
 							title="Macros as rows: the template next to every host that uses it"

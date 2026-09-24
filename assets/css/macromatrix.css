@@ -788,3 +788,20 @@
 .mm-review-flow {
 	margin-bottom: 8px;
 }
+
+/* Template detail dialogs */
+
+.mm-count {
+	font-weight: bold;
+}
+
+.mm-detail-filter {
+	width: 260px;
+	margin-bottom: 6px;
+}
+
+.mm-detail-scroll {
+	max-height: 55vh;
+	overflow: auto;
+	border: 1px solid var(--mm-line);
+}

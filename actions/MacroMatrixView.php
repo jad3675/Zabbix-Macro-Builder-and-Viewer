@@ -101,6 +101,7 @@ class MacroMatrixView extends CController {
 				'resolve' => CCsrfTokenHelper::get('macromatrix.resolve'),
 				'find' => CCsrfTokenHelper::get('macromatrix.find'),
 				'templates' => CCsrfTokenHelper::get('macromatrix.templates'),
+				'tpldetail' => CCsrfTokenHelper::get('macromatrix.tpldetail'),
 				'reach' => CCsrfTokenHelper::get('macromatrix.reach'),
 				'apply' => CCsrfTokenHelper::get('macromatrix.apply')
 			],

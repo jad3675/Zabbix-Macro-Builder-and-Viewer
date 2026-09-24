@@ -1,6 +1,6 @@
 # Macro Matrix
 
-Version 1.4.1
+Version 1.5.0
 
 A Zabbix frontend module that shows the effective value of user macros across many hosts, where each value comes from, and lets you change them in bulk: host overrides, template macros at the source, pins, reverts, CSV import and export.
 
@@ -24,7 +24,7 @@ Who sees it: Admin and Super admin user types whose role allows Data collection 
 
 With template rows, **Only templates used by hosts** drops templates nothing inherits, and **Also load the hosts that use them** adds every host that inherits a template row, directly or through other templates. Combined with macros as rows, that puts a template next to all its hosts and tints where they drift from it.
 
-**Templates in use.** A tab listing templates that at least one host inherits (optionally narrowed by template groups), with the number of hosts using each (total, and linked directly) and how many macros it defines, counting only those matching the Macros field when it is filled in. Sort by any column; **Include templates no host uses** shows the rest. **Compare with its hosts** opens the grid with the template and every host using it; **Macros** opens the template alone. Tick several to open them together. Counts cover the hosts and templates you can read.
+**Templates in use.** A tab listing templates that at least one host inherits (optionally narrowed by template groups), with the number of hosts using each (total, and linked directly) and how many macros it defines, counting only those matching the Macros field when it is filled in. Sort by any column; **Include templates no host uses** shows the rest. The counts are clickable: **Hosts using it** lists every host with how it gets the template (linked directly, or through which template), **Linked directly** opens the same list narrowed to direct links, and **Macros** lists the template's own macros with values, types and descriptions. Each dialog has a filter and buttons to open the result in the grid. **Compare with its hosts** opens the grid with the template and every host using it; **Macros** opens the template alone. Tick several to open them together. Counts cover the hosts and templates you can read.
 
 **Macros.** Type macro names: `{$SNMP_*}, {$LOW_SPACE_LIMIT}`. The braces and `$` are optional, `*` matches anything, and names are case-insensitive. Type an exact name (no `*`) to get a column even where the macro is not defined anywhere yet.
 
@@ -105,6 +105,7 @@ macromatrix/
 │   ├── MacroMatrixFind.php       Find mode
 │   ├── MacroMatrixReach.php      template macro reach
 │   ├── MacroMatrixTemplates.php  Templates in use
+│   ├── MacroMatrixTemplateDetail.php  hosts and macros behind its counts
 │   └── MacroMatrixApply.php      conflict check + writes
 ├── lib/
 │   ├── MacroResolver.php         precedence logic, no API calls
@@ -120,6 +121,9 @@ macromatrix/
 ```
 
 ## Changes
+
+**1.5.0**
+- Counts on the Templates in use tab open detail dialogs: hosts using the template (with how each gets it), directly linked hosts, and the template's macros, each filterable and one click away from the grid.
 
 **1.4.1**
 - Fixed an empty, unstyled message box appearing whenever messages were cleared (on every load).
